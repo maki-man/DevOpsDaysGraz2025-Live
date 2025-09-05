@@ -11,5 +11,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Run tests
+      - name: Setup Dotnet tools
+        uses: actions/setup-dotnet@v4
+        with:
+            dotnet-version: '8.0.x'
+
+      - name: Run Core.Test
         run: dotnet test .\src\DevOpsDaysTasks.Core.Tests
+
+      - name: Run Integration tests
+        run: dotnet test .\src\DevOpsDaysTasks.IntegrationTests
+
+      - name: Publish Build
+        run: dotnet publish -c Release src\DevOpsDaysTasks.UI\ -o DevOpsDaysTasks /p:Version=1.0.0 /p:VersionName=Bobcat
+
+      - name: Copy Template
+        run: |
+            mkdir -p DevOpsDaysTasks/Templates
+            mkdir -p DevOpsDaysTasks/Help
+            cp workshop_material\default-tasks.xml DevOpsDaysTasks\Templates
+            cp workshop_material\Help.pdf DevOpsDaysTasks\Help
+
+      - name: Sign
+        run: .\scripts\sign.ps1 .\DevOpsDaysTasks\DevOpsDaysTasks.UI.exe -PfxFile .\workshop_material\devopsdays_tasks_codesign.pfx -PfxPassword Password
+            
+      - name: Zip the folder
+        run: Compress-Archive -Path 'DevOpsDaysTasks' -DestinationPath 'DevOpsDaysTasks.zip'
+
+      - name: Create a GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: DevOpsDaysTasks
+          tag_name: v1.0.0
+          name: Release v1.0.0
+          body: This is a release containing the zipped 'DevOpsDaysTasks'.
