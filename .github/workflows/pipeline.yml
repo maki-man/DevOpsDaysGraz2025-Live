@@ -55,19 +55,20 @@ jobs:
       - name: Sign Release
         run: .\scripts\sign.ps1 .\DevOpsDaysTasks\DevOpsDaysTasks.UI.exe -PfxFile ${{ env.CERT_NAME }} -PfxPassword Password
  
-    #   - name: Upload Artifact
-    #     uses: actions/upload-artifact@v4
-    #     with:
-    #         path: DevOpsDaysTasks
-    #         name: DevOpsDaysTasks
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+            path: DevOpsDaysTasks
+            name: DevOpsDaysTasks
 
-      - name: Zip the folder
+      - name: Create ZIP
+        if: ${{ inputs.version }}
         run: Compress-Archive -Path 'DevOpsDaysTasks' -DestinationPath 'DevOpsDaysTasks.zip'
 
-    #   - name: Create a GitHub Release
-    #     uses: softprops/action-gh-release@v1
-    #     with:
-    #       files: DevOpsDaysTasks.zip
-    #       tag_name: v1.0.0
-    #       name: Release v1.0.0
-    #       body: This is a release containing the zipped 'DevOpsDaysTasks'.
+      - name: Create a GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ inputs.version }}
+        with:
+          name: v${{ inputs.version }}
+          tag_name: ${{ inputs.version }}
+          files: DevOpsDaysTasks.zip
