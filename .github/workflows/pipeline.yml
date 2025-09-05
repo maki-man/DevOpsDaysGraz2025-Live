@@ -2,6 +2,12 @@ name: Release Pipeline
 
 on:
   push: {}
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Name or version
+        required: true
+        type: string
 
 jobs:
   release-pipeline:
@@ -27,7 +33,9 @@ jobs:
 
       # Problem: Hardcoded Release version
       - name: Publish Build
-        run: dotnet publish -c Release src\DevOpsDaysTasks.UI\ -o DevOpsDaysTasks /p:Version=1.0.0 /p:VersionName=Bobcat
+        env:
+          VERSION: ${{ inputs.version || '0.0.0' }}
+        run: dotnet publish -c Release src\DevOpsDaysTasks.UI\ -o DevOpsDaysTasks /p:Version=${{ env.VERSION }} /p:VersionName=Bobcat
 
         # Problem: We don't want to use the workshop folder
       - name: Copy Template
@@ -45,7 +53,7 @@ jobs:
           Set-Content ${{ env.CERT_NAME }} -Value $content -AsByteStream
 
       - name: Sign Release
-        run: .\scripts\sign.ps1 .\DevOpsDaysTasks\DevOpsDaysTasks.UI.exe -PfxFile ${{ env.CERT_NAME }}
+        run: .\scripts\sign.ps1 .\DevOpsDaysTasks\DevOpsDaysTasks.UI.exe -PfxFile ${{ env.CERT_NAME }} -PfxPassword Password
  
     #   - name: Upload Artifact
     #     uses: actions/upload-artifact@v4
