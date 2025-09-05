@@ -8,6 +8,8 @@ jobs:
     name: Release Pipeline
     runs-on: windows-latest
     steps:
-      - name: Hello Pipeline
-        run: echo "hello pipeline"
-        
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run tests
+        run: dotnet test .\src\DevOpsDaysTasks.Core.Tests
