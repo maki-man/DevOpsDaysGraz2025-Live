@@ -5,41 +5,44 @@ on:
 
 jobs:
   release-pipeline:
-    name: Release Pipeline
-    runs-on: windows-latest
-    env:
-      CERT_name: cert.pfx
-      
-    steps:
+   name: Release Pipeline
+   runs-on: windows-latest
+   env:
+     CERT_NAME: cert.pfx
+
+   steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Setup Dotnet tools
         uses: actions/setup-dotnet@v4
         with:
-            dotnet-version: '8.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Run Core.Test
         run: dotnet test .\src\DevOpsDaysTasks.Core.Tests
 
-      - name: Run Integration tests
+      - name: Run IntegrationTests
         run: dotnet test .\src\DevOpsDaysTasks.IntegrationTests
 
+      # Problem: Hardcoded Release version
       - name: Publish Build
         run: dotnet publish -c Release src\DevOpsDaysTasks.UI\ -o DevOpsDaysTasks /p:Version=1.0.0 /p:VersionName=Bobcat
 
+        # Problem: We don't want to use the workshop folder
       - name: Copy Template
         run: |
             mkdir -p DevOpsDaysTasks/Templates
             mkdir -p DevOpsDaysTasks/Help
-            cp workshop_material\default-tasks.xml DevOpsDaysTasks\Templates
-            cp workshop_material\Help.pdf DevOpsDaysTasks\Help
-
+            cp workshop_material/default-tasks.xml DevOpsDaysTasks/Templates
+            cp workshop_material/Help.pdf DevOpsDaysTasks/Help
+      
+      # Problem: Cert and Password
       - name: Create Cert
         run: |
           $base64 = "${{ secrets.SIGN_CERTIFICATE_PFX_BASE64 }}"
           $content = [System.Convert]::FromBase64String($base64)
-          Set-Content ${{ env.CERT_NAME }} -Value $content -AsByteStrem
+          Set-Content ${{ env.CERT_NAME }} -Value $content -AsByteStream
 
       - name: Sign Release
         run: .\scripts\sign.ps1 .\DevOpsDaysTasks\DevOpsDaysTasks.UI.exe -PfxFile ${{ env.CERT_NAME }}
